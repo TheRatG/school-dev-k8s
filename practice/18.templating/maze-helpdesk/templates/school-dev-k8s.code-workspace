@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../../../.."
+		},
+		{
+			"path": "../../../../../mcs-kubernetes-project-in-60-minutes"
+		},
+		{
+			"path": "../../../../../xpaste"
+		}
+	],
+	"settings": {}
+}

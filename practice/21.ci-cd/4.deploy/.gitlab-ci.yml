@@ -1,5 +1,5 @@
 variables:
-  K8S_DEV_API_URL: https://kubernetes.default
+  K8S_DEV_API_URL: https://127.0.0.1:32769
   NAMESPACE: xpaste
 
 default:

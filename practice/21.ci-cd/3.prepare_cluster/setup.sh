@@ -52,6 +52,22 @@ else
     echo
 fi
 
+if kubectl -n "$NS" get secrets "$SA"; then
+    echo -e "${GREEN}secret for project already exists${NC}"
+else
+    echo -e "${GREEN}creating CI secret for project${NC}"
+    cat << EOF | kubectl apply --namespace $NS -f -
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: $SA
+          annotations:
+            kubernetes.io/service-account.name: $SA
+        type: kubernetes.io/service-account-token
+EOF
+    echo
+fi
+
 if kubectl -n "$NS" get role "$ROLE"; then
     echo -e "${GREEN}role for project already exists${NC}"
 else
@@ -62,7 +78,12 @@ else
         metadata:
           name: "$ROLE"
         rules:
-        - apiGroups: ["", "extensions", "apps", "batch", "events", "networking.k8s.io", "certmanager.k8s.io", "cert-manager.io", "monitoring.coreos.com"]
+        - apiGroups: 
+            - ""
+            - "apps"
+            - "batch"
+            - "networking.k8s.io"
+            - "certificates.k8s.io"
           resources: ["*"]
           verbs: ["*"]
 EOF
@@ -81,15 +102,16 @@ else
     echo
 fi
 
-echo -e "${GREEN}access token for new CI user:${NC}"
-kubectl get secret \
-    --namespace "$NS" \
-    $( \
-        kubectl get serviceaccount \
-            --namespace "$NS" \
-            "$SA" \
-            -o jsonpath='{.secrets[].name}'\
-    ) \
-    -o jsonpath='{.data.token}' | base64 $(base64_decode_key)
-echo
-
+if kubectl -n "$NS" get secrets "$SA"; then
+    echo -e "${GREEN}token for project already exists${NC}"
+    kubectl get secrets \
+        --namespace "$NS" \
+        "$SA" \
+        -o jsonpath='{.data.token}' | base64 $(base64_decode_key)
+    echo
+else
+    echo -e "${GREEN}token CI token for project${NC}"
+    kubectl create token \
+        --namespace "$NS" \
+        "$SA"
+fi
